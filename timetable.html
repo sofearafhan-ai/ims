@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <title>Study Plan - Class Schedule Builder</title>
+  </head>
+
+  <body>
+
+<header class="header-image">
+    <img src="timetableheader.jpg" width="50" alt="Header Image">
+</header>
+
+ <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container d-flex justify-content-between align-items-center">
+
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-flex flex-row">
+            <li class="nav-item me-3"><a class="nav-link" href="dashboard.html">Home</a></li>
+            <li class="nav-item me-3"><a class="nav-link" href="index.html">Task</a></li>
+            <li class="nav-item"><a class="nav-link active" href="timetable.html">Timetable</a></li>
+        </ul>
+
+        <div class="d-flex align-items-center">
+            <input class="form-control search-bar me-2" type="search" placeholder="Search">
+
+            <button class="btn btn-outline-secondary me-2 p-1" id="darkModeToggle" title="Toggle Dark Mode" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-moon-stars-fill" id="darkModeIcon"></i>
+            </button>
+
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    My Profile
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                    <li><p class="dropdown-item mb-0" id="profileSummary"></p></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="myprofile.html">View Profile</a></li>
+                    <li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<br>
+
+  <body class="p-3">
+  <div class="container">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h3 class="mb-0">Build Your Class Timetable</h3>
+      <div>
+        <button class="btn btn-outline-primary me-2" id="saveBtn" title="Save schedule">Save</button>
+        <button class="btn btn-outline-secondary me-2" id="clearBtn" title="Clear saved schedule">Clear</button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClassModal">+ Add Class</button>
+      </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-3">
+        <div class="card sidebar p-3">
+          <h5 class="card-title">Available Classes</h5>
+          <p class="small-muted">Drag a class onto any timeslot to schedule it.</p>
+          <div id="classList" class="mb-3">
+          </div>
+
+          <hr>
+          <div>
+            <h6 class="mb-1">Quick actions</h6>
+            <button class="btn btn-sm btn-outline-danger w-100 mb-2" id="removeAllPills">Remove All Available</button>
+          </div>
+
+          <hr>
+          <div class="mt-3">
+            <h6>Quick Tips</h6>
+            <div class="small-muted">Click the trash icon on a scheduled class to remove it. Scheduled classes are saved locally when you press Save.
+                 Timetable will download in your device if you click 'Download PDF'. And click the 'add class' button to insert your class, time and even you teacher name</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timetable -->
+      <div class="col-lg-9">
+        <div class="card p-3 timetable">
+          <div class="table-responsive">
+            <table class="table timetable-table align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th class="time-cell">Time</th>
+                  <th>Monday</th>
+                  <th>Tuesday</th>
+                  <th>Wednesday</th>
+                  <th>Thursday</th>
+                  <th>Friday</th>
+                </tr>
+              </thead>
+              <tbody id="timetableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Class Modal -->
+  <div class="modal fade" id="addClassModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form id="addClassForm" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add a New Class</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-2">
+              <label class="form-label">Class name</label>
+              <input class="form-control" id="className" required>
+            </div>
+            <div class="mb-2 row g-2">
+              <div class="col-6">
+                <label class="form-label">Teacher</label>
+                <input class="form-control" id="classTeacher" placeholder="(optional)">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Room</label>
+                <input class="form-control" id="classRoom" placeholder="(optional)">
+              </div>
+            </div>
+            <div class="mb-2 row g-2">
+              <div class="col-6">
+                <label class="form-label">Color</label>
+                <input class="form-control form-control-color" id="classColor" value="#198754" title="Choose color">
+              </div>
+              <div class="col-6">
+                <label class="form-label">Duration (hours)</label>
+                <select id="classDuration" class="form-select">
+                  <option value="1">1 hour</option>
+                  <option value="1.5">1.5 hours</option>
+                  <option value="2">2 hours</option>
+                  <option value="2.5">2.5 hours</option>
+                  <option value="3">3 hours</option>
+                  <option value="3.5">3.5 hours</option>
+                  <option value="4">4 hours</option>
+                  <option value="4.5">4.5 hours</option>
+                  <option value="5">5 hours</option>
+                </select>
+              </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-primary" type="submit">Add Class</button>
+          <button class="btn btn-danger me-2" id="pdfBtn">Download PDF</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<footer class="py-3 text-center shadow-sm">
+    <p>&copy; 2025 Study Plan. All rights reserved.</p>
+</footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+if(!loggedInUser) window.location.href = "login.html";
+else document.getElementById("profileSummary").innerHTML = `<strong>${loggedInUser.fullName}</strong><br>${loggedInUser.email}`;
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+});
+
+    const TIMES = [
+      "08:00 - 09:00","09:00 - 10:00","10:00 - 11:00","11:00 - 12:00",
+      "12:00 - 13:00","13:00 - 14:00","14:00 - 15:00","15:00 - 16:00",
+      "16:00 - 17:00"
+    ];
+    const DAYS = ["monday","tuesday","wednesday","thursday","friday"];
+
+    // Create timetable rows
+    const tbody = document.getElementById('timetableBody');
+    function buildTable() {
+      tbody.innerHTML = '';
+      TIMES.forEach((slot, idx) => {
+        const tr = document.createElement('tr');
+        // time cell
+        const timeTd = document.createElement('td');
+        timeTd.className = 'time-cell small text-muted';
+        timeTd.innerText = slot;
+        tr.appendChild(timeTd);
+
+        DAYS.forEach(day => {
+          const td = document.createElement('td');
+          td.className = 'dropzone';
+          td.dataset.day = day;
+          td.dataset.timeIndex = idx;
+          td.addEventListener('dragover', handleDragOver);
+          td.addEventListener('drop', handleDrop);
+          td.addEventListener('dragleave', () => td.classList.remove('over'));
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Drag & Drop handlers
+    function handleDragStart(e) {
+      const id = e.target.dataset.pillId;
+      const info = JSON.stringify({
+        pillId: id,
+        name: e.target.dataset.name,
+        color: e.target.dataset.color,
+        teacher: e.target.dataset.teacher,
+        room: e.target.dataset.room,
+        duration: e.target.dataset.duration
+      });
+      e.dataTransfer.setData('text/plain', info);
+      e.dataTransfer.effectAllowed = 'copy';
+    }
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('over');
+      e.dataTransfer.dropEffect = 'copy';
+    }
+    function handleDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('over');
+      const payload = e.dataTransfer.getData('text/plain');
+      if (!payload) return;
+      const data = JSON.parse(payload);
+      placeClassInCell(e.currentTarget, data);
+    }
+
+    function placeClassInCell(cell, data) {
+      const startIndex = parseInt(cell.dataset.timeIndex,10);
+      const day = cell.dataset.day;
+      const duration = parseFloat(data.duration) || 1;
+      const slotsNeeded = Math.round(duration / 1);
+      const card = document.createElement('div');
+      card.className = 'class-card';
+      card.style.background = data.color || '#0d6efd';
+      card.dataset.pillId = data.pillId || ('scheduled-' + Date.now());
+      card.dataset.name = data.name || '';
+      card.dataset.teacher = data.teacher || '';
+      card.dataset.room = data.room || '';
+
+      card.innerHTML = `<div style="font-weight:700">${escapeHtml(data.name)}</div>
+                        <div style="font-size:.78rem;opacity:.9">${escapeHtml(data.teacher || '')}${data.room? ' · '+escapeHtml(data.room):''}</div>`;
+
+      // remove button (trash icon)
+      const remBtn = document.createElement('button');
+      remBtn.className = 'remove-btn';
+      remBtn.title = 'Remove';
+      remBtn.innerHTML = '<i class="bi bi-trash"></i>';
+      remBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        card.remove();
+      });
+      card.appendChild(remBtn);
+
+      // on click: show details (basic)
+      card.addEventListener('click', () => {
+        alert(`${data.name}\nTeacher: ${data.teacher || '-'}\nRoom: ${data.room || '-'}\nDuration: ${data.duration}h\nDay: ${capitalize(day)}\nTime: ${TIMES[parseInt(cell.dataset.timeIndex,10)]}`);
+      });
+
+      cell.appendChild(card);
+    }
+
+    // Utility: escape HTML
+    function escapeHtml(unsafe) {
+      if (!unsafe) return '';
+      return unsafe.replace(/[&<"'>]/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]); });
+    }
+
+    // Sidebar: create draggable pill
+    let pillCounter = 0;
+    function createPill({name, color, teacher, room, duration}) {
+      const id = 'pill-'+(++pillCounter);
+      const pill = document.createElement('div');
+      pill.className = 'class-pill';
+      pill.draggable = true;
+      pill.dataset.pillId = id;
+      pill.dataset.name = name || '';
+      pill.dataset.color = color || '#0d6efd';
+      pill.dataset.teacher = teacher || '';
+      pill.dataset.room = room || '';
+      pill.dataset.duration = duration || '1';
+      pill.style.background = pill.dataset.color;
+      pill.textContent = name || '';
+      pill.title = (teacher? teacher + ' · ': '') + (room? room : '');
+      pill.addEventListener('dragstart', handleDragStart);
+
+      // small remove on pill (trash icon)
+      const xbtn = document.createElement('button');
+      xbtn.className = 'btn btn-sm btn-light ms-2';
+      xbtn.style.verticalAlign = 'middle';
+      xbtn.title = 'Remove from list';
+      xbtn.innerHTML = '<i class="bi bi-trash"></i>';
+      xbtn.addEventListener('click', (e) => { e.stopPropagation(); pill.remove(); });
+      pill.appendChild(xbtn);
+
+      document.getElementById('classList').appendChild(pill);
+    }
+
+    const addForm = document.getElementById('addClassForm');
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('className').value.trim();
+      const teacher = document.getElementById('classTeacher').value.trim();
+      const room = document.getElementById('classRoom').value.trim();
+      const color = document.getElementById('classColor').value;
+      const duration = document.getElementById('classDuration').value;
+      if (!name) return;
+      createPill({name, color, teacher, room, duration});
+      addForm.reset();
+      const modalEl = document.getElementById('addClassModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    });
+
+    document.getElementById('removeAllPills').addEventListener('click', () => {
+      document.getElementById('classList').innerHTML = '';
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const data = {pills:[], scheduled:[]};
+
+      document.querySelectorAll('#classList .class-pill').forEach(p => {
+        data.pills.push({
+          name: p.dataset.name,
+          color: p.dataset.color,
+          teacher: p.dataset.teacher,
+          room: p.dataset.room,
+          duration: p.dataset.duration
+        });
+      });
+      // save scheduled items (loop cells)
+      document.querySelectorAll('.dropzone').forEach(cell => {
+        const day = cell.dataset.day;
+        const timeIndex = parseInt(cell.dataset.timeIndex,10);
+        cell.querySelectorAll('.class-card').forEach(card => {
+          data.scheduled.push({
+            name: card.dataset.name || '',
+            color: card.style.backgroundColor || card.dataset.color || '',
+            teacher: card.dataset.teacher || '',
+            room: card.dataset.room || '',
+            day, timeIndex
+          });
+        });
+      });
+      localStorage.setItem('myTimetable', JSON.stringify(data));
+      alert('Saved to browser localStorage.');
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (!confirm('Clear saved timetable and reset the page?')) return;
+      localStorage.removeItem('myTimetable');
+      location.reload();
+    });
+
+    function restoreFromStorage() {
+      const raw = localStorage.getItem('myTimetable');
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        if (data.pills) data.pills.forEach(p => createPill(p));
+        if (data.scheduled) {
+          data.scheduled.forEach(s => {
+            // find cell by day+time
+            const cell = document.querySelector(`.dropzone[data-day="${s.day}"][data-time-index="${s.timeIndex}"]`);
+            if (cell) {
+              const card = document.createElement('div');
+              card.className = 'class-card';
+              card.style.background = s.color || '#0d6efd';
+              card.dataset.name = s.name || '';
+              card.dataset.teacher = s.teacher || '';
+              card.dataset.room = s.room || '';
+              card.innerHTML = `<div style="font-weight:700">${escapeHtml(s.name)}</div>
+                                <div style="font-size:.78rem;opacity:.9">${escapeHtml(s.teacher || '')}${s.room? ' · '+escapeHtml(s.room):''}</div>`;
+
+              const remBtn = document.createElement('button');
+              remBtn.className = 'remove-btn';
+              remBtn.title = 'Remove';
+              remBtn.innerHTML = '<i class="bi bi-trash"></i>';
+              remBtn.addEventListener('click', (ev) => { ev.stopPropagation(); card.remove(); });
+              card.appendChild(remBtn);
+
+              card.addEventListener('click', () => {
+                alert(`${card.dataset.name}\nTeacher: ${card.dataset.teacher || '-'}\nRoom: ${card.dataset.room || '-'}\nDay: ${capitalize(cell.dataset.day)}\nTime: ${TIMES[parseInt(cell.dataset.timeIndex,10)]}`);
+              });
+
+              cell.appendChild(card);
+            }
+          });
+        }
+      } catch (e) { console.warn('restore error',e); }
+    }
+
+    function capitalize(s){ return s && s[0].toUpperCase()+s.slice(1); }
+
+    buildTable();
+    restoreFromStorage();
+
+    function attachQuickClickHandlers() {
+      document.querySelectorAll('.dropzone').forEach(z => {
+        z.addEventListener('click', (e) => {
+          if (e.target.closest('.remove-btn')) return;
+          const name = prompt('Class name to place in this slot (leave empty to cancel):');
+          if (!name) return;
+          const color = prompt('Hex color for the class (e.g. #198754) or leave blank for default:','#0d6efd') || '#0d6efd';
+          placeClassInCell(e.currentTarget, {name, color, teacher:'', room:'', duration:1});
+        });
+      });
+    }
+    attachQuickClickHandlers();
+
+    document.getElementById('classList').addEventListener('click', (e) => {
+      const pill = e.target.closest('.class-pill');
+      if (!pill) return;
+    });
+    document.getElementById("pdfBtn").addEventListener("click", () => {
+    const timetableCard = document.querySelector(".timetable"); 
+
+    html2canvas(timetableCard, {
+        scale: 2,           
+        backgroundColor: null 
+    }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jspdf.jsPDF("p", "mm", "a4");
+
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        const imgWidth = pdfWidth;
+        const imgHeight = canvas.height * (pdfWidth / canvas.width);
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+
+        pdf.save("My_Timetable.pdf");
+    });
+});
+
+// Dark Mode toggle
+const darkModeToggle = document.getElementById("darkModeToggle");
+const darkModeIcon = document.getElementById("darkModeIcon");
+const htmlElement = document.documentElement;
+
+const currentTheme = localStorage.getItem("theme") || "light";
+htmlElement.setAttribute("data-bs-theme", currentTheme);
+updateIcon(currentTheme);
+
+darkModeToggle.addEventListener("click", () => {
+    const newTheme = htmlElement.getAttribute("data-bs-theme") === "light" ? "dark" : "light";
+    htmlElement.setAttribute("data-bs-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+    updateIcon(newTheme);
+});
+
+function updateIcon(theme) {
+    darkModeIcon.className = theme === "dark" ? "bi bi-sun-fill" : "bi bi-moon-stars-fill";
+}
+</script>
+</body>
+</html>

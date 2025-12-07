@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Plan – Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="header-image">
+    <img src="headerdashboard.jpg" width="50" alt="Header Image">
+</header>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container d-flex justify-content-between align-items-center">
+
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0 d-flex flex-row">
+            <li class="nav-item me-3"><a class="nav-link active" href="dashboard.html">Home</a></li>
+            <li class="nav-item me-3"><a class="nav-link" href="index.html">Task</a></li>
+            <li class="nav-item"><a class="nav-link" href="timetable.html">Timetable</a></li>
+        </ul>
+
+        <div class="d-flex align-items-center">
+            <input class="form-control search-bar me-2" type="search" placeholder="Search">
+
+            <button class="btn btn-outline-secondary me-2 p-1" id="darkModeToggle" title="Toggle Dark Mode" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-moon-stars-fill" id="darkModeIcon"></i>
+            </button>
+
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    My Profile
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                    <li><p class="dropdown-item mb-0" id="profileSummary"></p></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="myprofile.html">View Profile</a></li>
+                    <li><button class="dropdown-item text-danger" id="logoutBtn">Logout</button></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<main class="container my-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4 text-center" style="display: flex; justify-content: center; align-items: center;">
+                <h4>Work Progress</h4>
+                <br>
+                <h7>The chart will shown if you insert your progress at task page</h7>
+                <canvas id="progressChart" style="max-width: 300px; max-height: 300px;"></canvas>
+            </div>
+
+            <div class="card">
+                <h5>To-Do List</h5>
+
+                <!-- Add Task Input -->
+                <div class="d-flex mb-3" style="max-width: 400px;">
+                    <input type="text" id="new-task-input" class="form-control me-2" placeholder="Add new task...">
+                    <button class="btn btn-primary" id="add-task-btn">Add</button>
+                </div>
+
+                <!-- Task List -->
+                <div id="senarai-kerja"></div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card p-4 mb-4">
+                <h4 class="text-center">Introduction</h4>
+                <p>
+                    Welcome to the Study Plan. This system will be your friend in academic tasks,
+                    track your work progress, and stay organized throughout your study and assignment.
+                    We will make your study life better with us ;D.
+                </p>
+            </div>
+
+            <div class="card p-4 mb-4" id="study-timer-card" style="border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h4 class="text-center mb-3">Study Time Tracker</h4>
+
+                <div class="text-center" id="timer-display" style="font-size: 2rem; font-weight: bold;">
+                    00:00:00
+                </div>
+
+                <div class="d-flex justify-content-center mt-3 gap-2">
+                    <button class="btn btn-success" id="start-btn">Start</button>
+                    <button class="btn btn-warning" id="pause-btn">Pause</button>
+                    <button class="btn btn-primary" id="save-btn">Save</button>
+                </div>
+            </div>
+                <div class="mt-3">
+                    <h6 class="text-center">Study Records</h6>
+                    <ul id="study-records" class="list-group list-group-flush"></ul>
+            </div>
+
+            <div class="mt-4">
+                    <h5 class="text-center">Study Time History</h5>
+                    <ul id="study-history" class="list-group list-group-flush"></ul>
+                    <button id="clear-history-btn" class="btn btn-danger mt-3">Clear History</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="py-3 text-center shadow-sm">
+    <p>&copy; 2025 Study Plan. All rights reserved.</p>
+</footer>
+
+<script>
+const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+if(!loggedInUser) window.location.href = "login.html";
+else document.getElementById("profileSummary").innerHTML = `<strong>${loggedInUser.fullName}</strong><br>${loggedInUser.email}`;
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("loggedInUser");
+    window.location.href = "login.html";
+});
+
+// Dark mode
+const darkModeToggle = document.getElementById('darkModeToggle');
+const darkModeIcon = document.getElementById('darkModeIcon');
+const htmlElement = document.documentElement;
+const currentTheme = localStorage.getItem('theme') || 'light';
+htmlElement.setAttribute('data-bs-theme', currentTheme);
+updateIcon(currentTheme);
+
+darkModeToggle.addEventListener('click', () => {
+    const currentTheme = htmlElement.getAttribute('data-bs-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    htmlElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateIcon(newTheme);
+});
+
+function updateIcon(theme){
+    darkModeIcon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
+}
+
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+let today = new Date().toISOString().split("T")[0];
+tasks.forEach(t => {
+    t.status = (t.date < today) ? "Overdue" : "Pending";
+});
+
+// Save updated tasks back
+localStorage.setItem("tasks", JSON.stringify(tasks));
+
+// Count pending tasks by priority
+let high = tasks.filter(t => t.status === "Pending" && t.priority === "High").length;
+let medium = tasks.filter(t => t.status === "Pending" && t.priority === "Medium").length;
+let low = tasks.filter(t => t.status === "Pending" && t.priority === "Low").length;
+
+// Create the pie chart
+new Chart(document.getElementById("progressChart"), {
+    type: "pie",
+    data: {
+        labels: ["High", "Medium", "Low"],
+        datasets: [{
+            data: [high, medium, low],
+            backgroundColor: ["#dc3545", "#ffc107", "#0d6efd"]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'right', align: 'center' }
+        }
+    }
+});
+
+// ---- STUDY TIMER ----
+let timerInterval;
+let seconds = 0;
+
+function formatTime(sec) {
+    let h = Math.floor(sec / 3600);
+    let m = Math.floor((sec % 3600) / 60);
+    let s = sec % 60;
+    return (
+        (h < 10 ? "0" + h : h) +
+        ":" +
+        (m < 10 ? "0" + m : m) +
+        ":" +
+        (s < 10 ? "0" + s : s)
+    );
+}
+
+document.getElementById("start-btn").addEventListener("click", function () {
+    if (!timerInterval) {
+        timerInterval = setInterval(() => {
+            seconds++;
+            document.getElementById("timer-display").innerText = formatTime(seconds);
+        }, 1000);
+    }
+});
+
+document.getElementById("pause-btn").addEventListener("click", function () {
+    clearInterval(timerInterval);
+    timerInterval = null;
+});
+
+// ---- STUDY RECORDS ----
+let studyRecords = JSON.parse(localStorage.getItem("studyRecords")) || [];
+
+function displayStudyRecords() {
+    const recordList = document.getElementById("study-records");
+    recordList.innerHTML = "";
+    studyRecords.forEach((record, idx) => {
+        let li = document.createElement("li");
+        li.className = "list-group-item py-1";
+        li.textContent = `${idx + 1}. Started at ${record.startTime}`;
+        recordList.appendChild(li);
+    });
+}
+
+document.getElementById("start-btn").addEventListener("click", function () {
+    if (!timerInterval) {
+        let startTime = new Date().toLocaleString();
+        studyRecords.push({ startTime });
+        localStorage.setItem("studyRecords", JSON.stringify(studyRecords));
+        displayStudyRecords();
+
+        timerInterval = setInterval(() => {
+            seconds++;
+            document.getElementById("timer-display").innerText = formatTime(seconds);
+        }, 1000);
+    }
+});
+
+displayStudyRecords();
+
+// ---------------- STUDY TIME HISTORY SYSTEM ----------------
+let studyHistory = JSON.parse(localStorage.getItem("studyHistory")) || [];
+
+// Display History
+function displayStudyHistory() {
+    const historyList = document.getElementById("study-history");
+    historyList.innerHTML = "";
+
+    if (studyHistory.length === 0) {
+        historyList.innerHTML = `<li class="list-group-item text-center text-muted">No history yet</li>`;
+        return;
+    }
+
+    studyHistory.forEach((item, index) => {
+        let li = document.createElement("li");
+        li.className = "list-group-item";
+        li.innerHTML = `
+            <strong>${item.date}</strong>  
+            <br>
+            Studied for: <span class="text-primary">${item.time}</span>
+        `;
+        historyList.appendChild(li);
+
+    });
+}
+
+// Modify SAVE button to store history
+document.getElementById("save-btn").addEventListener("click", function () {
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    if (seconds === 0) {
+        alert("Timer is empty! Start studying first.");
+        return;
+    }
+
+    // Format the saved time
+    let finalTime = formatTime(seconds);
+
+    // Save to history
+    studyHistory.push({
+        date: new Date().toLocaleString(),
+        time: finalTime
+    });
+
+    localStorage.setItem("studyHistory", JSON.stringify(studyHistory));
+
+    alert("Study time saved!");
+
+    // Reset timer
+    seconds = 0;
+    document.getElementById("timer-display").innerText = "00:00:00";
+
+    // Update History list
+    displayStudyHistory();
+});
+
+displayStudyHistory();
+
+displayStudyHistory();
+
+document.getElementById("clear-history-btn").addEventListener("click", function () {
+    if (confirm("Are you sure you want to clear all study history?")) {
+        localStorage.removeItem("studyHistory");
+        studyHistory = [];   
+        displayStudyHistory();
+        alert("Study history cleared!");
+    }
+});
+
+// ---- USER TASKS SCRIPT ----
+let userTasks = JSON.parse(localStorage.getItem("userTasks")) || [];
+
+function displayTasks() {
+    let list = document.getElementById("senarai-kerja");
+    list.innerHTML = "";
+
+    userTasks.forEach((task, index) => {
+        let item = document.createElement("div");
+        item.className = "mb-2 d-flex align-items-center";
+
+        item.innerHTML = `
+            <input type="checkbox" class="me-2" onchange="toggleTask(${index})" ${task.done ? "checked" : ""}>
+            <span style="flex:1; ${task.done ? 'text-decoration: line-through; opacity:0.6;' : ''}">
+                ${task.text}
+            </span>
+            <button class="btn btn-danger btn-sm" onclick="deleteTask(${index})">X</button>
+        `;
+        list.appendChild(item);
+
+    });
+}
+
+document.getElementById("add-task-btn").addEventListener("click", function () {
+    let input = document.getElementById("new-task-input");
+    let text = input.value.trim();
+    if (text === "") return;
+
+    userTasks.push({ text: text, done: false });
+    input.value = "";
+    localStorage.setItem("userTasks", JSON.stringify(userTasks));
+    displayTasks();
+});
+
+function toggleTask(index) {
+    userTasks[index].done = !userTasks[index].done;
+    localStorage.setItem("userTasks", JSON.stringify(userTasks));
+    displayTasks();
+}
+
+function deleteTask(index) {
+    userTasks.splice(index, 1);
+    localStorage.setItem("userTasks", JSON.stringify(userTasks));
+    displayTasks();
+}
+
+// Initial display
+displayTasks();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
